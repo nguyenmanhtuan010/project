@@ -14,6 +14,11 @@
 
 std::vector<int> clients;
 
+bool isFileEmpty(const char* filename) {
+    std::ifstream file(filename);
+    return file.peek() == std::ifstream::traits_type::eof();
+}
+
 void writeFile(int clientSocket, const char* filename, const char* content) {
     std::ofstream file(filename, std::ios::app);
     if (!file.is_open()) {
@@ -93,9 +98,13 @@ void handleClient(int clientSocket) {
             if (!file.is_open()) {
                 send(clientSocket, "Failed to open file\n", strlen("Failed to open file\n"), 0);
             } else {
+				if (isFileEmpty(filename)) {
+				char temp[] = "empty";
+				send(clientSocket, temp, strlen(temp), 0);
+				}else{
                 std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
                 send(clientSocket, content.c_str(), content.length(), 0);
-                file.close();
+                file.close();}
             }
         } else if (strncmp(cleanedBuffer, "delete ", 7) == 0) {
             if (std::remove(&cleanedBuffer[7]) != 0) {
